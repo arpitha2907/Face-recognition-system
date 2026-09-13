@@ -22,24 +22,40 @@ async function loadHealth() {
 
     console.log("HEALTH:", data);
 
-    $("model").textContent =
-      (data.model || "buffalo_l").toUpperCase();
+    const modelEl = $("model");
+    const thresholdEl = $("threshold");
+    const identitiesEl = $("identities");
 
-    $("threshold").textContent =
-      Number(data.threshold ?? 0.45).toFixed(2);
+    if (modelEl) {
+      modelEl.textContent =
+        (data.model || "buffalo_s").toUpperCase();
+    }
 
-    $("identities").textContent =
-      data.identities ?? "—";
+    if (thresholdEl) {
+      thresholdEl.textContent =
+        Number(data.threshold ?? 0.45).toFixed(2);
+    }
 
-    $("systemState").textContent =
-      "SYSTEM ONLINE";
+    if (identitiesEl) {
+      identitiesEl.textContent =
+        data.identities ?? "—";
+    }
+
+    const systemState = $("systemState");
+
+    if (systemState) {
+      systemState.textContent = "SYSTEM ONLINE";
+    }
 
   } catch (error) {
 
     console.error("HEALTH CHECK ERROR:", error);
 
-    $("systemState").textContent =
-      "API UNAVAILABLE";
+    const systemState = $("systemState");
+
+    if (systemState) {
+      systemState.textContent = "API UNAVAILABLE";
+    }
   }
 }
 
@@ -156,11 +172,21 @@ async function startCamera() {
 
     cameraStatus.textContent = "CAMERA ACTIVE";
 
-    $("resultIdentity").textContent = "Looking for face…";
-    $("statusBadge").textContent = "SCANNING";
-    $("statusBadge").className = "status-badge";
-    $("resultScore").textContent = "—";
-    $("meterFill").style.width = "0%";
+    $("resultIdentity").textContent =
+      "Looking for face…";
+
+    $("statusBadge").textContent =
+      "SCANNING";
+
+    $("statusBadge").className =
+      "status-badge";
+
+    $("resultScore").textContent =
+      "—";
+
+    $("meterFill").style.width =
+      "0%";
+
 
     // Give the camera a moment to initialize.
     setTimeout(() => {
@@ -172,15 +198,19 @@ async function startCamera() {
 
     }, 1000);
 
+
   } catch (error) {
 
-    cameraStatus.textContent = "CAMERA ACCESS DENIED";
+    cameraStatus.textContent =
+      "CAMERA ACCESS DENIED";
 
     showError(
       "Camera access is unavailable. Allow camera permission in your browser."
     );
   }
 }
+
+
 function stopCamera() {
 
   if (cameraTimer) {
@@ -189,6 +219,7 @@ function stopCamera() {
   }
 
   if (cameraStream) {
+
     cameraStream.getTracks().forEach(
       track => track.stop()
     );
@@ -203,36 +234,62 @@ function stopCamera() {
   startCameraBtn.disabled = false;
   stopCameraBtn.disabled = true;
 
-  cameraStatus.textContent = "CAMERA READY";
+  cameraStatus.textContent =
+    "CAMERA READY";
+
 
   // Reset analysis result
-  $("statusBadge").textContent = "WAITING";
-  $("statusBadge").className = "status-badge";
+
+  $("statusBadge").textContent =
+    "WAITING";
+
+  $("statusBadge").className =
+    "status-badge";
 
   $("resultIdentity").textContent =
     "No image analysed";
 
-  $("resultScore").textContent = "—";
+  $("resultScore").textContent =
+    "—";
 
-  $("meterFill").style.width = "0%";
+  $("meterFill").style.width =
+    "0%";
 
   $("resultReason").textContent =
-    "Upload an image or start the camera.";
+    "Upload an image or start the camera";
+
+
+  // Safely reset threshold
+  const thresholdEl = $("threshold");
+
+  const threshold =
+    thresholdEl
+      ? Number(thresholdEl.textContent)
+      : 0.45;
 
   $("resultThreshold").textContent =
-    `Threshold ${Number(
-      document.getElementById("threshold").textContent
-    ).toFixed(2)}`;
+    `Threshold ${
+      Number.isFinite(threshold)
+        ? threshold.toFixed(2)
+        : "0.45"
+    }`;
+
 
   // Reset pipeline
+
   ["retinaNode", "arcfaceNode", "matchNode"]
     .forEach(id => {
+
       const node = $(id);
+
       if (node) {
-        node.className = "node pipeline-node";
+        node.className =
+          "node pipeline-node";
       }
+
     });
 }
+
 
 async function captureCameraFrame() {
 
@@ -251,10 +308,15 @@ async function captureCameraFrame() {
 
   try {
 
-    const canvas = document.createElement("canvas");
+    const canvas =
+      document.createElement("canvas");
 
-    // Keep frames reasonably small for faster inference.
+
+    // Keep frames reasonably small
+    // for faster inference.
+
     const width = 640;
+
     const height =
       Math.round(
         cameraVideo.videoHeight *
@@ -264,7 +326,9 @@ async function captureCameraFrame() {
     canvas.width = width;
     canvas.height = height;
 
-    const ctx = canvas.getContext("2d");
+
+    const ctx =
+      canvas.getContext("2d");
 
     ctx.drawImage(
       cameraVideo,
@@ -273,6 +337,7 @@ async function captureCameraFrame() {
       width,
       height
     );
+
 
     canvas.toBlob(
       async blob => {
@@ -285,7 +350,9 @@ async function captureCameraFrame() {
         const file = new File(
           [blob],
           "camera-frame.jpg",
-          { type: "image/jpeg" }
+          {
+            type: "image/jpeg"
+          }
         );
 
         await identifyCameraFrame(file);
@@ -297,7 +364,13 @@ async function captureCameraFrame() {
       0.85
     );
 
+
   } catch (error) {
+
+    console.error(
+      "CAMERA CAPTURE ERROR:",
+      error
+    );
 
     cameraBusy = false;
   }
@@ -320,33 +393,64 @@ async function identifyCameraFrame(file) {
       }
     );
 
+
     const d = await r.json();
 
+
     if (!r.ok) {
+
+      console.error(
+        "CAMERA API ERROR:",
+        d
+      );
+
+      cameraStatus.textContent =
+        "API ERROR";
+
       return;
     }
 
+
     displayResult(d);
 
+
     if (d.status === "MATCH") {
-      cameraStatus.textContent = "IDENTITY CONFIRMED";
+
+      cameraStatus.textContent =
+        "IDENTITY CONFIRMED";
+
     }
 
     else if (d.status === "UNKNOWN") {
-      cameraStatus.textContent = "UNKNOWN FACE";
+
+      cameraStatus.textContent =
+        "UNKNOWN FACE";
+
     }
 
     else if (d.status === "NO_FACE") {
-      cameraStatus.textContent = "SEARCHING FOR FACE";
+
+      cameraStatus.textContent =
+        "SEARCHING FOR FACE";
+
     }
 
     else if (d.status === "MULTIPLE_FACES") {
-      cameraStatus.textContent = "MULTIPLE FACES";
+
+      cameraStatus.textContent =
+        "MULTIPLE FACES";
     }
+
 
   } catch (error) {
 
-    cameraStatus.textContent = "PIPELINE ERROR";
+    console.error(
+      "CAMERA API REQUEST ERROR:",
+      error
+    );
+
+    cameraStatus.textContent =
+      "PIPELINE ERROR";
   }
 }
 
@@ -357,70 +461,137 @@ async function identifyCameraFrame(file) {
 
 function setProcessing() {
 
-  $("resultIdentity").textContent = "Analysing…";
+  $("resultIdentity").textContent =
+    "Analysing…";
 
-  $("statusBadge").textContent = "PROCESSING";
+  $("statusBadge").textContent =
+    "PROCESSING";
 
   $("statusBadge").className =
     "status-badge";
 
-  $("resultScore").textContent = "—";
+  $("resultScore").textContent =
+    "—";
 
-  $("meterFill").style.width = "0%";
+  $("meterFill").style.width =
+    "0%";
 }
+
 
 function updatePipeline(status) {
 
-  const retina = $("retinaNode");
-  const arcface = $("arcfaceNode");
-  const matcher = $("matchNode");
+  const retina =
+    $("retinaNode");
 
-  if (!retina || !arcface || !matcher) {
+  const arcface =
+    $("arcfaceNode");
+
+  const matcher =
+    $("matchNode");
+
+
+  if (
+    !retina ||
+    !arcface ||
+    !matcher
+  ) {
     return;
   }
 
-  // Reset
-  retina.className = "node pipeline-node";
-  arcface.className = "node pipeline-node";
-  matcher.className = "node pipeline-node";
 
-  // Face successfully detected and embedding generated
+  // Reset
+
+  retina.className =
+    "node pipeline-node";
+
+  arcface.className =
+    "node pipeline-node";
+
+  matcher.className =
+    "node pipeline-node";
+
+
+  // Face successfully detected
+  // and embedding generated
+
   if (
     status === "MATCH" ||
     status === "UNKNOWN"
   ) {
-    retina.classList.add("success");
-    arcface.classList.add("success");
+
+    retina.classList.add(
+      "success"
+    );
+
+    arcface.classList.add(
+      "success"
+    );
   }
 
+
   // Final matching stage
+
   if (status === "MATCH") {
-    matcher.classList.add("success");
+
+    matcher.classList.add(
+      "success"
+    );
+
   }
 
   else if (status === "UNKNOWN") {
-    matcher.classList.add("warning");
+
+    matcher.classList.add(
+      "warning"
+    );
+
   }
 
-  else if (status === "MULTIPLE_FACES") {
-    retina.classList.add("warning");
+  else if (
+    status === "MULTIPLE_FACES"
+  ) {
+
+    retina.classList.add(
+      "warning"
+    );
+
   }
 
-  else if (status === "NO_FACE") {
-    retina.classList.add("warning");
+  else if (
+    status === "NO_FACE"
+  ) {
+
+    retina.classList.add(
+      "warning"
+    );
+
   }
 
-  else if (status === "ERROR") {
-    retina.classList.add("error");
+  else if (
+    status === "ERROR"
+  ) {
+
+    retina.classList.add(
+      "error"
+    );
   }
 }
 
+
 function displayResult(d) {
-  updatePipeline(d.status);
-  const score = d.similarity;
+
+  updatePipeline(
+    d.status
+  );
+
+
+  const score =
+    d.similarity;
+
 
   $("statusBadge").textContent =
     d.status;
+
 
   $("statusBadge").className =
     `status-badge ${
@@ -430,6 +601,7 @@ function displayResult(d) {
           ? "unknown"
           : ""
     }`;
+
 
   $("resultIdentity").textContent =
     d.identity ||
@@ -441,27 +613,40 @@ function displayResult(d) {
           : "Unknown face"
     );
 
+
   $("resultScore").textContent =
     score == null
       ? "—"
       : score.toFixed(3);
+
 
   $("meterFill").style.width =
     score == null
       ? "0%"
       : `${Math.max(
           0,
-          Math.min(100, score * 100)
+          Math.min(
+            100,
+            score * 100
+          )
         )}%`;
+
 
   $("resultReason").textContent =
     d.reason ||
     "Similarity cleared the acceptance threshold.";
 
+
+  const threshold =
+    Number(d.threshold);
+
+
   $("resultThreshold").textContent =
-    `Threshold ${Number(
-      d.threshold
-    ).toFixed(2)}`;
+    `Threshold ${
+      Number.isFinite(threshold)
+        ? threshold.toFixed(2)
+        : "0.45"
+    }`;
 }
 
 
@@ -491,7 +676,9 @@ function showError(message) {
 // ENROLLMENT
 // ─────────────────────────────────────────────
 
-const enrollInput = $("enrollInput");
+const enrollInput =
+  $("enrollInput");
+
 
 enrollInput.onchange = () => {
 
@@ -510,6 +697,7 @@ $("enrollBtn").onclick =
     const identity =
       $("identity").value.trim();
 
+
     if (
       !identity ||
       !enrollInput.files.length
@@ -521,12 +709,16 @@ $("enrollBtn").onclick =
       return;
     }
 
-    const fd = new FormData();
+
+    const fd =
+      new FormData();
+
 
     fd.append(
       "identity",
       identity
     );
+
 
     [...enrollInput.files].forEach(
       file =>
@@ -536,20 +728,26 @@ $("enrollBtn").onclick =
         )
     );
 
+
     $("enrollStatus").textContent =
       "Processing enrollment…";
 
+
     try {
 
-      const r = await fetch(
-        `${API}/enroll`,
-        {
-          method: "POST",
-          body: fd
-        }
-      );
+      const r =
+        await fetch(
+          `${API}/enroll`,
+          {
+            method: "POST",
+            body: fd
+          }
+        );
 
-      const d = await r.json();
+
+      const d =
+        await r.json();
+
 
       if (!r.ok) {
 
@@ -561,11 +759,14 @@ $("enrollBtn").onclick =
         );
       }
 
+
       $("enrollStatus").textContent =
         `${d.identity} enrolled · ` +
         `${d.enrolled_images} valid image(s).`;
 
+
       loadHealth();
+
 
     } catch (e) {
 
@@ -575,7 +776,12 @@ $("enrollBtn").onclick =
   };
 
 
+// ─────────────────────────────────────────────
+// PAGE CLEANUP
+// ─────────────────────────────────────────────
+
 // Stop camera if the page is closed.
+
 window.addEventListener(
   "beforeunload",
   stopCamera
