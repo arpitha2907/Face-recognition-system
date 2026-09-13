@@ -23,6 +23,7 @@ A production-oriented face recognition and identification system using pretraine
 
 ## Architecture
 
+```text
 Image / Webcam Frame
         |
         v
@@ -46,6 +47,7 @@ Face Detection + Alignment
     |            |
     v            v
   MATCH       UNKNOWN
+```
 
 ## Technology Stack
 
@@ -63,7 +65,9 @@ The system uses the pretrained ArcFace recognition model provided by InsightFace
 
 During enrollment, valid embeddings are stored in the SQLite gallery. During identification, the query embedding is compared against stored embeddings using cosine similarity.
 
+```text
 Face -> RetinaFace -> ArcFace -> Embedding -> Cosine Similarity -> Decision
+```
 
 ## Enrollment
 
@@ -73,7 +77,11 @@ Multiple images can be enrolled for an identity. Each image is processed through
 
 The highest cosine similarity score is compared with the configured threshold.
 
-Current threshold:0.45
+Current threshold:
+
+```text
+0.45
+```
 
 If the score is at least 0.45, the identity is accepted. Otherwise the result is `UNKNOWN`.
 
@@ -81,14 +89,16 @@ If the score is at least 0.45, the identity is accepted. Otherwise the result is
 
 The browser captures webcam frames and periodically sends JPEG frames to the FastAPI camera endpoint.
 
+```text
 Webcam -> Frame -> FastAPI -> RetinaFace -> ArcFace -> Cosine Match
+```
 
 The UI displays the status of the RetinaFace, ArcFace, and Cosine Match stages.
 
 ## Failure Handling
 
 | Condition | Response |
-
+|---|---|
 | No face detected | `NO_FACE` |
 | Multiple faces detected | `MULTIPLE_FACES` |
 | Similarity below threshold | `UNKNOWN` |
@@ -102,6 +112,7 @@ The UI displays the status of the RetinaFace, ArcFace, and Cosine Match stages.
 ```http
 GET /api/health
 ```
+
 Returns model, threshold, identity count, and embedding count.
 
 ### Image Identification
@@ -111,6 +122,8 @@ POST /api/identify
 ```
 
 Example response:
+
+```json
 {
   "status": "MATCH",
   "identity": "person_01",
@@ -118,6 +131,7 @@ Example response:
   "threshold": 0.45,
   "reason": null
 }
+```
 
 ### Camera Identification
 
@@ -137,6 +151,7 @@ Accepts an identity name and one or more images.
 
 ## Project Structure
 
+```text
 face-recognition-identification-system/
 ├── README.md
 ├── requirements.txt
@@ -165,37 +180,50 @@ face-recognition-identification-system/
 └── data/
     ├── enrolled/
     └── evaluation/
+```
 
 ## Installation
 
 Python 3.11 is recommended.
 
+```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
 
 InsightFace downloads the required pretrained model when initialized.
 
 ## Running
 
+```bash
 python main.py
+```
 
 Then use the web interface to enroll identities, upload images, or start the webcam.
 
 ## Configuration
 
+```text
 Model: buffalo_l
 Detection threshold: 0.25
 Matching threshold: 0.45
 Detection size: 640 x 640
 Execution provider: CPU
+```
 
 ## Evaluation
 
-Run: python scripts/evaluate.py
+Run:
+
+```bash
+python scripts/evaluate.py
+```
+
 Current evaluation:
 
-| Metric | Result | :
+| Metric | Result |
+|---|---:|
 | Samples evaluated | 6 |
 | Accuracy | 100% |
 | Macro Precision | 100% |
@@ -219,13 +247,25 @@ The project-specific engineering work covers enrollment, embedding extraction an
 
 ## Testing
 
-Run: pytest -q
+Run:
 
-Current result: 3 passed in 0.14s
+```bash
+pytest -q
+```
+
+Current result:
+
+```text
+3 passed in 0.14s
+```
 
 ## Performance
 
-Current measured mean inference time is approximately: 0.379 seconds per sample
+Current measured mean inference time is approximately:
+
+```text
+0.379 seconds per sample
+```
 
 The current environment uses CPU inference. Performance varies with hardware, image resolution, detection size, and execution provider.
 
