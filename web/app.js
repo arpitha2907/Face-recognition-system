@@ -12,15 +12,34 @@ let cameraBusy = false;
 
 async function loadHealth() {
   try {
-    const r = await fetch(`${API}/health`);
-    const d = await r.json();
+    const response = await fetch(`${API}/health`);
 
-    $("model").textContent = d.model.toUpperCase();
-    $("threshold").textContent = Number(d.threshold).toFixed(2);
-    $("identities").textContent = d.identities;
-    $("systemState").textContent = "SYSTEM ONLINE";
-  } catch (e) {
-    $("systemState").textContent = "API UNAVAILABLE";
+    if (!response.ok) {
+      throw new Error(`Health check failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    console.log("HEALTH:", data);
+
+    $("model").textContent =
+      (data.model || "buffalo_l").toUpperCase();
+
+    $("threshold").textContent =
+      Number(data.threshold ?? 0.45).toFixed(2);
+
+    $("identities").textContent =
+      data.identities ?? "—";
+
+    $("systemState").textContent =
+      "SYSTEM ONLINE";
+
+  } catch (error) {
+
+    console.error("HEALTH CHECK ERROR:", error);
+
+    $("systemState").textContent =
+      "API UNAVAILABLE";
   }
 }
 
