@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FaceID — Identification Console</title>
+  <link rel="stylesheet" href="/web/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><span></span></div>
+        <div>
+          <div class="eyebrow">BIOMETRIC SYSTEM</div>
+          <div class="brand-name">FACE<span>ID</span></div>
+        </div>
+      </div>
+      <div class="system-state"><i></i><span id="systemState">SYSTEM ONLINE</span></div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="kicker">IDENTIFICATION CONSOLE</p>
+        <h1>Know the face.<br><em>Reject the unknown.</em></h1>
+        <p class="sub">A precision identification interface built around face detection, ArcFace embeddings and thresholded similarity matching.</p>
+      </div>
+      
+    </section>
+
+    <section class="console-grid">
+      <article class="glass-card scanner-card">
+        <div class="card-head">
+          <div><span class="index">01</span><h2>IDENTIFY</h2></div>
+          <span class="micro">SINGLE FACE / LIVE PIPELINE</span>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+
+  <div class="camera-view" id="cameraView">
+    <video id="cameraVideo" autoplay playsinline></video>
+    <div class="camera-overlay">
+      <div class="scan-corner top-left"></div>
+      <div class="scan-corner top-right"></div>
+      <div class="scan-corner bottom-left"></div>
+      <div class="scan-corner bottom-right"></div>
+      <span id="cameraStatus">CAMERA READY</span>
+    </div>
+  </div>
+
+  <div class="camera-controls">
+    <button class="primary" id="startCameraBtn">
+      START CAMERA <b>●</b>
+    </button>
+
+    <button class="secondary" id="stopCameraBtn" disabled>
+      STOP CAMERA
+    </button>
+  </div>
+
+  <div class="camera-divider">
+    <span>OR</span>
+  </div>
+
+  <div class="orb">
+    <div class="orb-ring ring-1"></div>
+    <div class="orb-ring ring-2"></div>
+    <div class="orb-core">FACE</div>
+  </div>
+
+  <div class="drop-title">Identify from an image</div>
+  <div class="drop-note">JPG, PNG, WEBP · single face recommended</div>
+
+  <input id="identifyInput" type="file" accept="image/*" hidden>
+
+  <button class="primary" id="identifyBtn">
+    SELECT IMAGE <b>↗</b>
+  </button>
+
+</div>
+
+        <div class="preview" id="preview"></div>
+
+        <div class="result-panel" id="resultPanel">
+          <div class="result-label">ANALYSIS RESULT</div>
+          <div class="result-main">
+            <div>
+              <span class="status-badge" id="statusBadge">WAITING</span>
+              <h3 id="resultIdentity">No image analysed</h3>
+            </div>
+            <div class="score"><small>SIMILARITY</small><strong id="resultScore">—</strong></div>
+          </div>
+          <div class="meter"><span id="meterFill"></span></div>
+          <div class="result-meta"><span id="resultReason">Upload an image to begin.</span><span id="resultThreshold">Threshold —</span></div>
+        </div>
+      </article>
+
+      <aside class="side-column">
+        <article class="glass-card enroll-card">
+          <div class="card-head">
+            <div><span class="index">02</span><h2>ENROLL</h2></div>
+            <span class="micro">BUILD GALLERY</span>
+          </div>
+          <label class="field-label">IDENTITY LABEL</label>
+          <input id="identity" class="text-input" placeholder="e.g. person_001" autocomplete="off">
+          <label class="upload-line">
+            <span>+</span>
+            <div><strong>Add reference images</strong><small>3–10 varied images recommended</small></div>
+            <input id="enrollInput" type="file" accept="image/*" multiple hidden>
+          </label>
+          <div id="fileList" class="file-list"></div>
+          <button class="secondary" id="enrollBtn">ENROLL IDENTITY <b>↗</b></button>
+          <div class="tiny-status" id="enrollStatus"></div>
+        </article>
+
+        <article class="glass-card pipeline-card">
+          <div class="card-head">
+            <div><span class="index">03</span><h2>PIPELINE</h2></div>
+          </div>
+          <div class="pipeline">
+  <div>
+    <span class="node pipeline-node" id="retinaNode"></span>
+    <div>
+      <b>RETINAFACE</b>
+      <small>DETECTION / ALIGNMENT</small>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div>
+    <span class="node pipeline-node" id="arcfaceNode"></span>
+    <div>
+      <b>ARCFACE</b>
+      <small>EMBEDDING VECTOR</small>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div>
+    <span class="node pipeline-node" id="matchNode"></span>
+    <div>
+      <b>COSINE MATCH</b>
+      <small>THRESHOLD REJECTION</small>
+    </div>
+  </div>
+</div>
+        </article>
+      </aside>
+    </section>
+
+    <footer>
+      <span>AUTHORIZED USE ONLY · BIOMETRIC DATA REQUIRES APPROPRIATE CONSENT & CONTROLS</span>
+      <span>v1.0.0</span>
+    </footer>
+  </main>
+  <script src="/web/app.js"></script>
+</body>
+</html>
